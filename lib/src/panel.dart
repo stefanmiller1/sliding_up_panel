@@ -29,12 +29,12 @@ class SlidingUpPanel extends StatefulWidget {
   final Widget? panel;
 
   /// WARNING: This feature is still in beta and is subject to change without
-  /// notice. Stability is not gauranteed. Provides a [ScrollController] and
+  /// notice. Stability is not gauranteed. Provides a [PageController] and
   /// [ScrollPhysics] to attach to a scrollable object in the panel that links
   /// the panel position with the scroll position. Useful for implementing an
   /// infinite scroll behavior. If [panel] and [panelBuilder] are both non-null,
   /// [panel] will be used.
-  final Widget Function(ScrollController sc)? panelBuilder;
+  final Widget Function(PageController pc)? panelBuilder;
 
   /// The Widget displayed overtop the [panel] when collapsed.
   /// This fades out as the panel is opened.
@@ -208,7 +208,7 @@ class SlidingUpPanel extends StatefulWidget {
 class _SlidingUpPanelState extends State<SlidingUpPanel>
     with SingleTickerProviderStateMixin {
   late AnimationController _ac;
-  late ScrollController _sc;
+  late PageController _pc;
 
   bool _scrollingEnabled = false;
   VelocityTracker _vt = new VelocityTracker.withKind(PointerDeviceKind.touch);
@@ -238,9 +238,9 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
 
     // prevent the panel content from being scrolled only if the widget is
     // draggable and panel scrolling is enabled
-    _sc = new ScrollController();
-    _sc.addListener(() {
-      if (widget.isDraggable && !_scrollingEnabled) _sc.jumpTo(0);
+    _pc = new PageController();
+    _pc.addListener(() {
+      if (widget.isDraggable && !_scrollingEnabled) _pc.jumpTo(0);
     });
 
     widget.controller?._addState(this);
@@ -349,7 +349,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                             height: widget.maxHeight,
                             child: widget.panel != null
                                 ? widget.panel
-                                : widget.panelBuilder!(_sc),
+                                : widget.panelBuilder!(_pc),
                           )),
 
                       // header
@@ -478,7 +478,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
     // if the panel is open and the user hasn't scrolled, we need to determine
     // whether to enable scrolling if the user swipes up, or disable closing and
     // begin to close the panel if the user swipes down
-    if (_isPanelOpen && _sc.hasClients && _sc.offset <= 0) {
+    if (_isPanelOpen && _pc.hasClients && _pc.offset <= 0) {
       setState(() {
         if (dy < 0) {
           _scrollingEnabled = true;
