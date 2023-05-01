@@ -125,11 +125,11 @@ class SlidingUpPanel extends StatefulWidget {
 
   /// If non-null, this callback is called when the
   /// panel is fully opened
-  final VoidCallback? onPanelOpened;
+  final void Function(PageController pageController)? onPanelOpened;
 
   /// If non-null, this callback is called when the panel
   /// is fully collapsed.
-  final VoidCallback? onPanelClosed;
+  final void Function(PageController pageController)? onPanelClosed;
 
   /// If non-null and true, the SlidingUpPanel exhibits a
   /// parallax effect as the panel slides up. Essentially,
@@ -219,6 +219,13 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
   void initState() {
     super.initState();
 
+    // prevent the panel content from being scrolled only if the widget is
+    // draggable and panel scrolling is enabled
+    _pc = new PageController();
+    _pc.addListener(() {
+      if (widget.isDraggable && !_scrollingEnabled) _pc.jumpTo(0);
+    });
+
     _ac = new AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 300),
@@ -230,18 +237,13 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
         if (widget.onPanelSlide != null) widget.onPanelSlide!(_ac.value);
 
         if (widget.onPanelOpened != null && _ac.value == 1.0)
-          widget.onPanelOpened!();
+          widget.onPanelOpened!(_pc);
 
         if (widget.onPanelClosed != null && _ac.value == 0.0)
-          widget.onPanelClosed!();
+          widget.onPanelClosed!(_pc);
       });
 
-    // prevent the panel content from being scrolled only if the widget is
-    // draggable and panel scrolling is enabled
-    _pc = new PageController();
-    _pc.addListener(() {
-      if (widget.isDraggable && !_scrollingEnabled) _pc.jumpTo(0);
-    });
+
 
     widget.controller?._addState(this);
   }
@@ -311,6 +313,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                 child: AnimatedBuilder(
                   animation: _ac,
                   builder: (context, child) {
+                    print(_ac.value);
+                    print(widget.maxHeight);
                     return Container(
                       height:
                           _ac.value * (widget.maxHeight - widget.minHeight) +
